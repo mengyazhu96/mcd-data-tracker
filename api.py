@@ -2,7 +2,7 @@ from flask import Flask
 from flask_restful import Resource, Api, abort
 
 from db import DBClient
-from write_metrics import METRIC_TYPES
+from write_metrics import METRIC_TYPES_TO_DESCRIPTION
 
 
 app = Flask(__name__)
@@ -22,21 +22,27 @@ class MetricTypesList(Resource):
     def get(self):
         return {
             'metric_types': [
-                {'metric_type': metric_type}
-                for metric_type in METRIC_TYPES
+                {
+                    'metric_type': metric_type,
+                    'description': description,
+                }
+                for metric_type, description in METRIC_TYPES_TO_DESCRIPTION.items()
             ]
         }
 
 
 def abort_if_metric_type_does_not_exist(metric_type):
-    if metric_type not in METRIC_TYPES:
+    if metric_type not in METRIC_TYPES_TO_DESCRIPTION:
         abort(404, message=f'Metric type "{metric_type}" does not exist')
 
 
 class MetricType(Resource):
     def get(self, metric_type):
         abort_if_metric_type_does_not_exist(metric_type)
-        return {'metric_type': metric_type}
+        return {
+            'metric_type': metric_type,
+            'description': METRIC_TYPES_TO_DESCRIPTION[metric_type],
+        }
 
 
 class MetricTypeMetricsList(Resource):
@@ -76,7 +82,9 @@ class MetricHistory(Resource):
     def get(self, metric_type, symbol):
         abort_if_metric_type_does_not_exist(metric_type)
         abort_if_symbol_does_not_exist(metric_type, symbol)
-        return get_db_client().get_values_in_last_24h(metric_type, symbol)
+        return {
+            'history': get_db_client().get_values_in_last_24h(metric_type, symbol),
+        }
 
 
 class MetricRank(Resource):

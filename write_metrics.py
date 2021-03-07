@@ -9,10 +9,10 @@ from db import DBClient
 
 METRIC_PRICE = 'price'
 METRIC_VOLUME = 'volume'
-METRIC_TYPES = (
-    METRIC_PRICE,
-    METRIC_VOLUME,
-)
+METRIC_TYPES_TO_DESCRIPTION = {
+    METRIC_PRICE: 'Average price across all markets a symbol is traded on.',
+    METRIC_VOLUME: 'Volume of a symbol in the last 24 hours, totalled over all markets.',
+}
 
 
 class DataFetcher:
@@ -64,7 +64,7 @@ class DataFetcher:
             volumes[base_symbol].append(base_volume)
             volumes[quote_symbol].append(quote_volume)
             prices[pair_symbol].append(price)
-        self.db_client.insert_many_metric_history(
+        self.db_client.insert_rows(
             self.get_volume_insert_rows(volumes, fetch_timestamp)
             + self.get_price_insert_rows(prices, fetch_timestamp)
         )

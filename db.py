@@ -39,14 +39,14 @@ class DBClient:
             result = cursor.fetchall()
         return result
 
-    def get_all(self, columns=('*',), conditions=tuple()):
-        query = f'SELECT {",".join(columns)} FROM metric_history'
+    def get_all(self, conditions=tuple()):
+        query = f'SELECT * FROM metric_history'
         if conditions:
             query += ' WHERE '
             query += ' AND '.join(conditions)
         return self._read_all(query)
 
-    def insert_many_metric_history(self, rows):
+    def insert_rows(self, rows):
         with self.get_connection() as connection:
             cursor = connection.cursor()
             cursor.executemany(
