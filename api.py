@@ -83,7 +83,13 @@ class MetricRank(Resource):
     def get(self, metric_type, symbol):
         abort_if_metric_type_does_not_exist(metric_type)
         abort_if_symbol_does_not_exist(metric_type, symbol)
-        raise NotImplementedError
+        symbol_rank, total_symbols = get_db_client().get_symbol_rank_by_sd(
+            metric_type, symbol,
+        )
+        return {
+            'rank': symbol_rank,
+            'total': total_symbols,
+        }
 
 
 api.add_resource(Ping, '/')

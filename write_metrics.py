@@ -53,12 +53,16 @@ class DataFetcher:
 
             base_symbol = self.pairs[pair_symbol]['base']
             quote_symbol = self.pairs[pair_symbol]['quote']
-            base_volume = summary_24h['volume']
-            quote_volume = summary_24h['volumeQuote']
+            try:
+                base_volume = float(summary_24h['volume'])
+                quote_volume = float(summary_24h['volumeQuote'])
+                price = float(summary_24h['price']['last'])
+            except ValueError as e:
+                print(e)
+                print(symbol)
+
             volumes[base_symbol].append(base_volume)
             volumes[quote_symbol].append(quote_volume)
-
-            price = summary_24h['price']['last']
             prices[pair_symbol].append(price)
         self.db_client.insert_many_metric_history(
             self.get_volume_insert_rows(volumes, fetch_timestamp)
@@ -87,6 +91,7 @@ if __name__ == '__main__':
     while True:
         current_time = datetime.utcnow()
         if (current_time - last_data_fetch_time).seconds >= 60:
-            print(f'Updating Data at {current_time.isoformat()}...')
+            print(f'Updating data at {current_time.isoformat()}...')
             data_fetcher.update_data()
+            print('Data updated.\n')
             last_data_fetch_time = current_time

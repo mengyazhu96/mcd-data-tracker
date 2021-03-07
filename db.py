@@ -54,19 +54,23 @@ class DBClient:
                 rows,
             )
 
-    def get_sd_by_symbol(self, metric_type):
+    def get_symbol_rank_by_sd(self, metric_type, symbol):
         with self.get_connection() as connection:
             connection.create_aggregate('sd', 1, SDAggregate)
             cursor = connection.cursor()
             cursor.execute(f'''
-                SELECT symbol, sd(value)
+                SELECT symbol, RANK() OVER (
+                    ORDER BY sd(value) DESC
+                )
                 FROM metric_history
                 WHERE metric_type = "{metric_type}"
                 AND timestamp > "{get_timestring_24h_ago()}"
-                ORDER BY sd(value) DESC
+                GROUP BY symbol
             ''')
             result = cursor.fetchall()
-        return result
+        symbol_rank, = [row[1] for row in result if row[0] == symbol]
+        num_symbols = len(result)
+        return symbol_rank, num_symbols
 
 
 class SDAggregate:
@@ -77,6 +81,5 @@ class SDAggregate:
         self.values.append(value)
 
     def finalize(self):
-        print(len(values))
         return np.std(self.values)
 
